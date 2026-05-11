@@ -269,7 +269,7 @@ def figure_3_per_meeting_scatter() -> None:
                                 shrinkA=2, shrinkB=4),
             )
 
-    ax.set_ylabel(r"mean window mode-gap (engine $-$ paper Kalshi)")
+    ax.set_ylabel(r"mean mode-gap (engine $-$ Kalshi)")
     ax.legend(loc="lower left", handlelength=0.6, handletextpad=0.5,
               borderaxespad=0.4)
     ax.xaxis.set_major_locator(mdates.AutoDateLocator(maxticks=10))
