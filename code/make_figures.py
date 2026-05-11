@@ -50,6 +50,12 @@ REGIME_COLORS = {
 }
 
 
+def _savefig(fig, stem: str) -> None:
+    """Save both PDF (for the paper) and PNG (for the README) of a figure."""
+    fig.savefig(FIG_DIR / f"{stem}.pdf")
+    fig.savefig(FIG_DIR / f"{stem}.png", dpi=200)
+
+
 def _set_style() -> None:
     plt.rcParams.update({
         "text.usetex":           True,
@@ -176,7 +182,7 @@ def figure_1_regime_sign_match() -> None:
     ax.legend(loc="upper left", bbox_to_anchor=(0.02, 1.0), ncol=1,
               handlelength=1.2, handletextpad=0.6, borderpad=0.4)
     _hgrid(ax)
-    fig.savefig(FIG_DIR / "fig1_regime_sign_match.pdf")
+    _savefig(fig, "fig1_regime_sign_match")
     plt.close(fig)
 
 
@@ -224,7 +230,7 @@ def figure_2_case_studies() -> None:
 
     axes[0].legend(loc="upper left", handlelength=1.6, handletextpad=0.5,
                    borderaxespad=0.3, fontsize=8)
-    fig.savefig(FIG_DIR / "fig2_case_studies.pdf")
+    _savefig(fig, "fig2_case_studies")
     plt.close(fig)
 
 
@@ -272,7 +278,7 @@ def figure_3_per_meeting_scatter() -> None:
         label.set_rotation(30)
         label.set_ha("right")
     _hgrid(ax)
-    fig.savefig(FIG_DIR / "fig3_per_meeting_scatter.pdf")
+    _savefig(fig, "fig3_per_meeting_scatter")
     plt.close(fig)
 
 
