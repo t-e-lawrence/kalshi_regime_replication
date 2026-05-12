@@ -19,7 +19,7 @@ Outputs:
   output/per_day.csv           — per (meeting, day) gaps for plotting
 
 Methodology mirrors Diercks/Katz/Wright §5 (mode over-concentration,
-narrower distribution, tail under-allocation) but with two refinements:
+narrower distribution, tail under-allocation) but with three refinements:
 
   1. Engine snapshot = last-of-day rather than daily average. The
      daily-average construction blurs mode-gap signals because the
@@ -27,10 +27,18 @@ narrower distribution, tail under-allocation) but with two refinements:
      information that the (faster) Kalshi market HAS by close.
 
   2. Per-meeting regime classification by paper Kalshi's *minimum*
-     mode probability across the 14-day pre-meeting window:
+     mode probability across the 14-day pre-meeting window
+     (exclusive of the meeting day itself):
        quiet     : min mode_prob ≥ 0.85  (always confident)
        mixed     : 0.60 ≤ min mode_prob < 0.85
        contested : min mode_prob < 0.60  (genuine uncertainty)
+
+  3. Operationalized metric definitions:
+       mode_gap   = e_mode_p − p_mode_p
+       tail_gap   = (mass ≥2 strikes from each distribution's own
+                     mode) — same definition both sides, anchored
+                     to the relevant mode. 50bp on a 25bp grid.
+       spread_gap = H(engine) − H(paper) on native support.
 """
 from __future__ import annotations
 
@@ -39,7 +47,7 @@ import json
 import math
 import statistics
 from collections import defaultdict
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -50,13 +58,32 @@ OUTPUT_DIR = REPO_ROOT / "output"
 REGIME_QUIET_FLOOR = 0.85
 REGIME_CONTESTED_CEILING = 0.60
 
-# Diercks-comparable sample window for like-for-like replication of their
-# Table 3 Panel B. Their paper says "since 2022" with ~27 meetings. This
-# slice (Sept 2022 through Dec 2025) yields exactly 27 meetings and is
-# our primary sample for both the replication and the regime extension.
-# Set SAMPLE_WINDOW = None to use the full available data (37 meetings,
-# July 2021 through March 2026); used in the robustness check.
-SAMPLE_WINDOW: tuple[str, str] | None = ("2022-09-21", "2025-12-10")
+# Pre-meeting horizon: ONLY days within `PRE_MEETING_WINDOW_DAYS` of
+# the meeting (exclusive of the meeting day itself) feed into the
+# regime classifier.
+PRE_MEETING_WINDOW_DAYS = 14
+INCLUDE_MEETING_DAY = False  # meeting-day mode prob spikes to ~1.0
+
+# Strike-grid spacing for Fed target-rate buckets. Far-tail threshold for
+# tail_gap is 2 * GRID_STEP_PCT (anything ≥2 strikes from the modal
+# bucket). DKW-aligned: their tail metrics in stagflation.R are
+# explicit "above X / below X" thresholds, equivalent to this for the
+# rate grid.
+GRID_STEP_PCT = 0.25
+TAIL_THRESHOLD_PCT = 2 * GRID_STEP_PCT  # 0.50
+
+# Sample window. Lower bound (2022-09-21) is the first FOMC where
+# Kalshi had non-trivial pre-meeting volume on fed-decision contracts,
+# matching the DKW Section 6 sample start.
+#
+# Primary n=29 (Sept 2022 – Mar 2026): used for the headline regime
+# tables; covers every meeting where both DKW's published distribution
+# file and our engine have data. n=27 (Sept 2022 – Dec 2025) is
+# preserved as the "DKW Table 3 Panel B exact-replication" comparator
+# — set upper bound to "2025-12-10" to reproduce. Setting
+# SAMPLE_WINDOW = None uses the full 37-meeting set (adds 8
+# pre-Sept-2022 meetings) for robustness.
+SAMPLE_WINDOW: tuple[str, str] | None = ("2022-09-21", "2026-03-18")
 
 
 def _parse_date(s: str) -> date:
@@ -135,28 +162,50 @@ def load_paper_distributions() -> dict[str, dict[date, dict[float, float]]]:
 
 
 def gather_one(engine_dist: dict[float, float], paper_dist: dict[float, float]) -> dict[str, Any] | None:
-    """Compute mode/spread/tail metrics for one (meeting, day)."""
+    """Compute mode/spread/tail metrics for one (meeting, day).
+
+    Metric definitions:
+
+      mode_gap   = e_mode_p − p_mode_p
+        Compares the modal probability mass of each distribution —
+        symmetric across engine and paper sides, no dependence on
+        whether the two modal targets sit on the same strike.
+
+      tail_gap   = e_far_tail − p_far_tail
+        where far-tail = sum of mass in buckets ≥2 strikes from the
+        distribution's own mode (i.e., excludes mode + adjacent
+        buckets — 50bp+ away from the modal target on a 25bp grid).
+        Matches DKW's stagflation.R approach (prob_above_X,
+        prob_below_X — fixed threshold tails) and keeps tail_gap
+        algebraically independent from mode_gap.
+
+      spread_gap = H(engine_dist) − H(paper_dist)
+        Shannon entropy (natural log) computed on each distribution's
+        native support; 0·log(0)=0 so zero-mass strikes drop out.
+    """
     if not engine_dist or not paper_dist:
         return None
     e_mode_tm, e_mode_p = max(engine_dist.items(), key=lambda kv: kv[1])
     p_mode_tm, p_mode_p = max(paper_dist.items(), key=lambda kv: kv[1])
-    paper_at_engine_mode = paper_dist.get(e_mode_tm, 0.0)
-    mode_gap = e_mode_p - paper_at_engine_mode
-    e_tail = sum(v for k, v in engine_dist.items() if k != e_mode_tm)
-    p_tail = sum(v for k, v in paper_dist.items() if k != e_mode_tm)
-    tail_gap = e_tail - p_tail
+    mode_gap = e_mode_p - p_mode_p
 
-    common = set(engine_dist.keys()) & set(paper_dist.keys())
-    if common:
-        e_vec = [engine_dist[k] for k in common]
-        p_vec = [paper_dist[k] for k in common]
-        e_total, p_total = sum(e_vec), sum(p_vec)
-        if e_total > 0 and p_total > 0:
-            e_vec = [v / e_total for v in e_vec]
-            p_vec = [v / p_total for v in p_vec]
-            spread_gap = _entropy(e_vec) - _entropy(p_vec)
-        else:
-            spread_gap = 0.0
+    # Far-tail mass: probability ≥2 strikes from the distribution's
+    # own mode (i.e., 50bp+ away on a 25bp grid). DKW-style: same
+    # definition applied to both distributions, each anchored to its
+    # own mode. Independent of mode_gap by construction.
+    e_far_tail = sum(v for k, v in engine_dist.items()
+                     if abs(k - e_mode_tm) >= TAIL_THRESHOLD_PCT)
+    p_far_tail = sum(v for k, v in paper_dist.items()
+                     if abs(k - p_mode_tm) >= TAIL_THRESHOLD_PCT)
+    tail_gap = e_far_tail - p_far_tail
+
+    # Spread = entropy on each distribution's native support, no restriction.
+    e_total = sum(engine_dist.values())
+    p_total = sum(paper_dist.values())
+    if e_total > 0 and p_total > 0:
+        e_vec = [v / e_total for v in engine_dist.values()]
+        p_vec = [v / p_total for v in paper_dist.values()]
+        spread_gap = _entropy(e_vec) - _entropy(p_vec)
     else:
         spread_gap = 0.0
 
@@ -195,6 +244,15 @@ def main() -> int:
             continue
         engine_days = engine[probe_event_id]
         common_days = sorted(set(engine_days.keys()) & set(paper_dist.keys()))
+        # Enforce the pre-meeting window. Drop days outside
+        # [meeting - PRE_MEETING_WINDOW_DAYS, meeting) so the regime
+        # classifier is data-availability-invariant.
+        meeting_d = _parse_date(meeting_iso)
+        window_lo = meeting_d - timedelta(days=PRE_MEETING_WINDOW_DAYS)
+        common_days = [
+            d for d in common_days
+            if window_lo <= d < meeting_d + (timedelta(days=1) if INCLUDE_MEETING_DAY else timedelta(days=0))
+        ]
         if not common_days:
             continue
 

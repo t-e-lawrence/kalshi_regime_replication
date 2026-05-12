@@ -40,18 +40,21 @@ $27$-meeting sample (September 2022 through December 2025) using their
 own published moments file: Kalshi median and mode MAE replicate to
 $0.0000$ exactly; Kalshi mean MAE replicates within their two-decimal
 table-display rounding ($0.013$ vs.\ their reported $0.010$). We then
-extend their analysis by operationalizing their Section~5 qualitative
+extend their analysis on a $29$-meeting sample (Sept 2022 through
+March 2026, adding the two 2026 meetings DKW's repository now
+publishes) by operationalizing their Section~5 qualitative
 distributional claims as three numerical sign-match patterns
 (mode-gap, spread-gap, tail-gap) and conditioning on a regime
 classification by minimum pre-meeting Kalshi mode probability. The
 documented patterns are heavily \emph{regime-conditional}: in the
-$18$ ``quiet'' meetings the patterns hold at $39/56/39\%$,
+$20$ ``quiet'' meetings the patterns hold at $40/50/50\%$,
 indistinguishable from random; in the seven ``mixed'' meetings they
-hold at $71/71/71\%$, just clearing the implicit $70\%$ threshold; in
-the two ``contested'' meetings (March 2023 post-SVB, September 2024
-$50$bp surprise) they split $1/2$. We argue that DKW's qualitative
-claim is correct for the regime in which it applies but should not be
-extrapolated to a constant per-meeting bias.
+hold at $71/71/71\%$, just clearing the implicit $70\%$ threshold;
+in the two ``contested'' meetings (March 2023 post-SVB, September
+2024 $50$bp surprise) two of three patterns are $2/2$. We argue
+that DKW's qualitative claim is correct for the regime in which it
+applies but should not be extrapolated to a constant per-meeting
+bias.
 \end{abstract}
 
 \section{Introduction}
@@ -82,19 +85,22 @@ distributions is a systematic source of bias relative to Kalshi.
 
 This note has two parts. First (Section~\ref{sec:replication}) we
 replicate DKW's Table~3 Panel~B headline result on a $27$-meeting
-sample comparable to theirs, using their own publicly published
-moments file
+sample comparable to theirs (September 2022 -- December 2025), using
+their own publicly published moments file
 (\texttt{daily\_moments\_data/daily\_moments\_fed\_levels.csv} on
 their S3 bucket). Second (Sections~\ref{sec:pooled}--\ref{sec:cases})
-we extend the analysis: we operationalize the qualitative claims of
-DKW's Section~5 (mode over-concentration, narrower spread, tail
-under-allocation) as three sign-match patterns, classify meetings by
-pre-meeting Kalshi mode-probability into ``quiet,'' ``mixed,'' and
-``contested'' regimes, and ask whether the documented patterns are
-systematic or regime-conditional. We find them heavily regime-
-conditional: above the implicit $70\%$ threshold only in mixed
-meetings, with the contested bucket splitting and quiet meetings
-indistinguishable from random.
+we extend the analysis on a slightly wider $29$-meeting sample
+(through March 2026, picking up the two additional already-resolved
+FOMC meetings DKW's repository now publishes): we operationalize the
+qualitative claims of DKW's Section~5 (mode over-concentration,
+narrower spread, tail under-allocation) as three sign-match patterns,
+classify meetings by pre-meeting Kalshi mode-probability into
+``quiet,'' ``mixed,'' and ``contested'' regimes, and ask whether the
+documented patterns are systematic or regime-conditional. We find
+them heavily regime-conditional: above the implicit $70\%$ threshold
+only in mixed meetings, with the contested bucket clearing $70\%$ on
+two of three patterns and quiet meetings indistinguishable from
+random.
 
 \section{Data and Methodology}
 
@@ -134,12 +140,19 @@ distributions.
 
 \subsection{Sample window}
 
-Our primary sample is $27$ FOMC meetings from September 21, 2022
-through December 10, 2025, chosen to match the size DKW report
-($\sim$$27$ meetings since 2022) for like-for-like replication. We
-also have engine output for an additional $10$ meetings (July 2021
-through July 2022, plus three meetings in early 2026). Those are not
-in our primary sample but appear as a robustness check in
+We use two related samples. For the Table~3 Panel~B replication of
+Section~\ref{sec:replication} we keep DKW's $27$ FOMC meetings from
+September 21, 2022 through December 10, 2025 exactly, to match the
+size they report ($\sim$$27$ meetings since 2022) for like-for-like
+forecast-accuracy comparison. For the regime-conditional extension
+of Sections~\ref{sec:pooled}--\ref{sec:cases} we use a slightly
+wider $29$-meeting sample that adds the two 2026 FOMCs
+(January 29, 2026 and March 19, 2026) DKW's repository now ships
+in both their published moments file and their distribution file.
+Both meetings have full pre-meeting Kalshi tape and corresponding
+engine output. We also have engine output for an additional $8$
+meetings before September 2022; those are not in either headline
+sample but appear as a $37$-meeting robustness check in
 Section~\ref{sec:robustness}.
 
 \subsection{Comparison metrics}
@@ -151,21 +164,24 @@ mirroring the disagreement patterns highlighted in DKW's Section~5:
 \begin{itemize}
 \item \textbf{Mode-gap}:
 $\Delta_{\mathrm{mode}} = p_{\mathrm{eng}}[m_{\mathrm{eng}}] -
-p_{\mathrm{kal}}[m_{\mathrm{eng}}]$, where $m_{\mathrm{eng}} =
-\arg\max_b p_{\mathrm{eng}}[b]$. The original paper's framing predicts
-$\Delta_{\mathrm{mode}} > 0$ on average (futures over-concentrate on
-the modal bucket).
+p_{\mathrm{kal}}[m_{\mathrm{kal}}]$, the difference between each
+distribution's modal probability mass. The original paper's framing
+predicts $\Delta_{\mathrm{mode}} > 0$ on average (futures
+over-concentrate on the modal bucket).
 \item \textbf{Spread-gap}:
-$\Delta_{\mathrm{spread}} = H(p_{\mathrm{eng}}|_{B_*}) -
-H(p_{\mathrm{kal}}|_{B_*})$, where $H$ is Shannon entropy and $B_*$
-is the intersection of engine and paper supports, with both
-distributions renormalized to sum to one over $B_*$. Predicted
-$\Delta_{\mathrm{spread}} < 0$.
+$\Delta_{\mathrm{spread}} = H(p_{\mathrm{eng}}) - H(p_{\mathrm{kal}})$,
+where $H$ is Shannon entropy in nats computed on each distribution's
+native support (zero-mass strikes contribute zero via the standard
+$0 \log 0 = 0$ convention). Predicted $\Delta_{\mathrm{spread}} < 0$.
 \item \textbf{Tail-gap}:
-$\Delta_{\mathrm{tail}} = \sum_{b \neq m_{\mathrm{eng}}}
-p_{\mathrm{eng}}[b] - \sum_{b \neq m_{\mathrm{eng}}} p_{\mathrm{kal}}[b]$,
-where the paper sum runs over all paper buckets including those
-outside the engine's five-bucket support. Predicted
+$\Delta_{\mathrm{tail}} =
+\sum_{|b - m_{\mathrm{eng}}| \geq 0.5} p_{\mathrm{eng}}[b]
+- \sum_{|b - m_{\mathrm{kal}}| \geq 0.5} p_{\mathrm{kal}}[b]$,
+the mass at strikes at least $50$bp from the modal target on a
+$25$bp grid (i.e.\ excluding mode and adjacent buckets). Anchored to
+each distribution's own mode, mirroring DKW's threshold-tail
+formulations (\texttt{stagflation.R} in their replication
+repository). Predicted
 $\Delta_{\mathrm{tail}} < 0$.
 \end{itemize}
 
@@ -190,7 +206,7 @@ favorite at all times).
 (genuine ex-ante uncertainty about the modal outcome).
 \end{itemize}
 
-The $27$ meetings in our primary sample partition into $18$ quiet,
+The $29$ meetings in our extension sample partition into $20$ quiet,
 $7$ mixed, and $2$ contested. The two contested meetings are:
 
 \begin{itemize}[itemsep=0pt,topsep=0pt]
@@ -279,7 +295,7 @@ remainder of this note builds an extension on top of that baseline.
 \section{Pooled-sample results}\label{sec:pooled}
 
 Our extension operationalizes the qualitative claims of DKW's
-Section~5 as three sign-match patterns. Aggregating across all $27$
+Section~5 as three sign-match patterns. Aggregating across all $29$
 meetings of our primary sample without conditioning on regime, the
 sign-match rates are:
 
@@ -288,24 +304,24 @@ sign-match rates are:
 \toprule
 Pattern & Sign-match rate \\
 \midrule
-$\Delta_{\mathrm{mode}} > 0$  & $48\%$ ($13/27$) \\
-$\Delta_{\mathrm{spread}} < 0$ & $59\%$ ($16/27$) \\
-$\Delta_{\mathrm{tail}} < 0$   & $48\%$ ($13/27$) \\
+$\Delta_{\mathrm{mode}} > 0$  & $48\%$ ($14/29$) \\
+$\Delta_{\mathrm{spread}} < 0$ & $59\%$ ($17/29$) \\
+$\Delta_{\mathrm{tail}} < 0$   & $59\%$ ($17/29$) \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 None of the three pooled patterns clears a $70\%$ threshold. The
-spread-gap pattern is closest and is also the most mechanically
-robust signal: our engine's five-bucket support typically concentrates
-probability in the two adjacent buckets bracketing the
-linearly-interpolated post-meeting rate, whereas paper Kalshi has
-nonzero mass on between four and seven buckets typically. Lower
-entropy on common buckets is therefore a consequence of our
+spread-gap and tail-gap patterns tie at $59\%$ and are the most
+mechanically robust signals: our engine's five-bucket support
+typically concentrates probability in the two adjacent buckets
+bracketing the linearly-interpolated post-meeting rate, whereas
+paper Kalshi has nonzero mass on between four and seven buckets
+typically. Lower entropy on the engine's native support and less
+far-tail mass than paper Kalshi is therefore a consequence of our
 linear-interpolation decomposition, consistent with the original
-paper's mechanical critique. The mode-gap and tail-gap pooled signs
-both come out as coin-flips, motivating the regime-conditional
-analysis.
+paper's mechanical critique. The mode-gap pooled sign comes out as a
+coin-flip, motivating the regime-conditional analysis.
 
 \section{Regime-conditional results}\label{sec:regime}
 
@@ -314,12 +330,13 @@ analysis.
 \includegraphics[width=0.95\linewidth]{figures/fig1_regime_sign_match.pdf}
 \caption{Sign-match rates of the three documented disagreement
 patterns across regime buckets, computed on the mean-window measure
-($n=27$). The predicted signs clear the $70\%$ threshold in mixed
-meetings (all three at $71\%$, $5/7$), split on contested meetings
-($50\%$, $1/2$), and fail in quiet meetings ($39/56/39\%$). The
-non-quiet regimes are where the documented disagreement materially
-shows up; quiet meetings (the majority of the FOMC schedule) are
-indistinguishable from random.}
+($n=29$). The predicted signs clear the $70\%$ threshold in mixed
+meetings (all three at $71\%$, $5/7$), are split or above on
+contested meetings (mode-gap $1/2$, spread-gap and tail-gap $2/2$),
+and fail in quiet meetings ($40/50/50\%$). The non-quiet regimes
+are where the documented disagreement materially shows up; quiet
+meetings (the majority of the FOMC schedule) sit at or below
+$50\%$ on every pattern.}
 \label{fig:regime}
 \end{figure}
 
@@ -327,18 +344,19 @@ Figure~\ref{fig:regime} reports the three sign-match rates within each
 regime bucket on our primary sample:
 
 \begin{itemize}[itemsep=0pt,topsep=0pt]
-\item \textbf{Quiet meetings} ($n=18$): mode-gap $39\%$,
-spread-gap $56\%$, tail-gap $39\%$. None of the three patterns
-clears the threshold, and only spread-gap is meaningfully above
-random.
+\item \textbf{Quiet meetings} ($n=20$): mode-gap $40\%$
+($8/20$), spread-gap $50\%$ ($10/20$), tail-gap $50\%$ ($10/20$).
+None of the three patterns clears the threshold, and the
+spread/tail signal sits at exactly the random baseline.
 \item \textbf{Mixed meetings} ($n=7$): all three at $71\%$ ($5/7$).
 Just clears the implicit $70\%$ threshold from the original paper's
 framing.
-\item \textbf{Contested meetings} ($n=2$): all three at $50\%$
-($1/2$). The March 2023 contested meeting matches the predicted
-direction on each pattern; the September 2024 surprise does not, on
-the mean-window measure. Both meetings have the engine settling on
-the realized bucket sharply by FOMC close.
+\item \textbf{Contested meetings} ($n=2$): mode-gap $1/2$ ($50\%$);
+spread-gap and tail-gap both $2/2$ ($100\%$). The March 2023
+contested meeting and the September 2024 surprise both show the
+predicted spread-narrowing and tail-under-allocation; only the
+mode-gap pattern splits across them. Both meetings have the engine
+settling on the realized bucket sharply by FOMC close.
 \end{itemize}
 
 The qualitative claim that motivates DKW's Section~5 holds in our
@@ -399,14 +417,15 @@ post-meeting rate splitting probability between the two adjacent
 buckets due to the futures price sitting near a bucket boundary. The
 realized outcome was the cut. This is the opposite sign of the
 documented pattern: paper Kalshi was sharper than the engine on the
-modal bucket, not the engine over-concentrated. The mean window
-mode-gap is $-0.349$ and the tail-gap is $+0.349$.
+modal bucket, not the engine over-concentrated. The mean-window
+mode-gap is $-0.349$ and the mean-window spread-gap is $+0.325$
+(engine more diffuse).
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.95\linewidth]{figures/fig3_per_meeting_scatter.pdf}
-\caption{Per-meeting mean window mode-gap, by regime, on the primary
-$n=27$ sample. Each point is one FOMC. Quiet meetings cluster
+\caption{Per-meeting mean window mode-gap, by regime, on the
+$n=29$ extension sample. Each point is one FOMC. Quiet meetings cluster
 tightly around zero; the seven mixed meetings span $-0.349$
 (fed\_2025-12-10, the largest distributional gap in the sample) to
 $+0.11$. The two contested meetings (March 2023, September 2024)
@@ -472,43 +491,44 @@ via the standard FedWatch construction may be a reliable arbitrage
 opportunity. Our analysis suggests this is wrong:
 
 \begin{enumerate}[itemsep=0pt,topsep=0pt]
-\item Across quiet meetings ($67\%$ of the primary sample, $18/27$),
+\item Across quiet meetings ($69\%$ of the extension sample, $20/29$),
 engine and paper Kalshi distributions agree to within noise on every
 metric, including the mode probability. There is no systematic
 translation gap to capture.
-\item Across mixed meetings ($26\%$ of the sample, $7/27$), the
+\item Across mixed meetings ($24\%$ of the sample, $7/29$), the
 average gap is directionally consistent ($5/7$ on each pattern), but
 meeting-specific in magnitude---fed\_2025-12-10 has paper Kalshi
 leading the engine by $+0.35$ on the mode probability while
 fed\_2024-11-07 has the engine leading paper Kalshi by $+0.08$. A
 static threshold calibration would still be wrong-signed on the
 December 2025 and June 2023 cases.
-\item Across our two contested meetings ($7\%$, $2/27$), the
-directional bet implied by the documented pattern goes the right
-direction in $1/2$ cases. The March 2023 post-SVB meeting shows the
-engine more concentrated than paper Kalshi on the realized bucket,
-consistent with the paper's prediction. The September 2024 surprise
-goes the other way: by FOMC close the engine had \emph{higher}
-probability on the realized $50$bp bucket ($0.5750$) than paper
-Kalshi did ($0.5306$).
+\item Across our two contested meetings ($7\%$, $2/29$), the
+directional bet implied by the documented mode pattern goes the
+right direction in $1/2$ cases. The March 2023 post-SVB meeting
+shows the engine more concentrated than paper Kalshi on the
+realized bucket, consistent with the paper's prediction. The
+September 2024 surprise goes the other way: by FOMC close the
+engine had \emph{higher} probability on the realized $50$bp bucket
+($0.5750$) than paper Kalshi did ($0.5306$).
 \end{enumerate}
 
 A strategy attempting to monetize the documented disagreement
 requires either (i) per-meeting regime detection and forward-looking
 calibration of the gap sign---which is itself an alpha problem---or
 (ii) restricting attention to mixed and contested meetings, which
-together constitute $9/27 \approx 33\%$ of the FOMC schedule. Within
-that bucket the combined sign-match is $6/9 \approx 67\%$, so the
+together constitute $9/29 \approx 31\%$ of the FOMC schedule. Within
+that bucket the mode-gap sign-match is $6/9 \approx 67\%$, so the
 trading thesis is qualitatively alive but not statistically robust at
 this sample size.
 
 \subsection{Robustness: full $n=37$ sample}\label{sec:robustness}
 
-We also have engine output for $10$ meetings outside the primary
-sample window: $8$ pre-September-2022 meetings (July 2021 through
-July 2022) and the January and March 2026 FOMCs. The $8$ pre-2022
-meetings include the July 2022 contested $75/100$bp split and three
-mixed meetings from the early hiking cycle.
+We also have engine output for $8$ pre-September-2022 meetings
+(July 2021 through July 2022), including the July 2022 contested
+$75/100$bp split and three mixed meetings from the early hiking
+cycle. The two 2026 meetings included in the $n=29$ primary sample
+are not duplicated here; this section is purely about prepending the
+pre-2022 history to give a $37$-meeting picture.
 
 Repeating the regime-conditional analysis on the full $37$-meeting
 sample gives:
@@ -518,23 +538,21 @@ sample gives:
 \toprule
 Regime & $n$ & Sign-match (mode/spread/tail) \\
 \midrule
-quiet     & $24$ & $38/62/38\%$ \\
+quiet     & $24$ & $38/46/42\%$ \\
 mixed     & $10$ & $80/80/80\%$ ($8/10$ each) \\
-contested & $3$  & $67/67/67\%$ ($2/3$ each) \\
+contested & $3$  & $67/100/100\%$ ($2/3$, $3/3$, $3/3$) \\
 \midrule
-all       & $37$ & $51/68/51\%$ \\
+all       & $37$ & $51/59/57\%$ \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 Adding the three pre-2022 mixed meetings strengthens the mixed-bucket
 signal from $5/7$ to $8/10$, and the inclusion of the July 2022
-contested meeting (which matches the predicted directions on all
-three patterns) lifts the contested rate from $1/2$ to $2/3$. The
-qualitative finding---non-quiet patterns hold, quiet ones do
-not---is unchanged. We use the $n=27$ figures throughout the body of
-the note for like-for-like comparison with DKW's reported sample
-size.
+contested meeting (which matches the predicted directions on
+spread-gap and tail-gap) lifts the contested rate on those two
+patterns to $3/3$. The qualitative finding---non-quiet patterns
+hold, quiet ones do not---is unchanged.
 
 \section{Conclusion}
 
@@ -545,13 +563,15 @@ sample comparable to theirs (median and mode MAE = $0.0000$; mean MAE
 their table cannot be exactly replicated from public materials because
 their FFR forecast methodology is not in their public repository.
 
-We then extend their analysis by operationalizing the qualitative
-claims of their Section~5 as three numerical sign-match patterns and
-conditioning on a regime classification. The documented patterns are
-heavily regime-conditional. They clear the $70\%$ threshold only in
-mixed meetings ($71\%$, $5/7$), split in contested meetings ($1/2$ on
-the mean-window measure), and wash out in the $18/27$ quiet meetings
-($39/56/39\%$).
+We then extend their analysis on the $n=29$ extension sample (Sept
+2022 -- Mar 2026) by operationalizing the qualitative claims of
+their Section~5 as three numerical sign-match patterns and
+conditioning on a regime classification. The documented patterns
+are heavily regime-conditional. They clear the $70\%$ threshold
+in mixed meetings (all three at $71\%$, $5/7$); the contested
+bucket clears the threshold on spread-gap and tail-gap ($2/2$
+each) but splits on mode-gap ($1/2$); and the patterns wash out in
+the $20/29$ quiet meetings ($40/50/50\%$).
 
 We argue that DKW's qualitative claim about the binomial-tree
 weakness of fed funds futures-derived distributions is correct in
@@ -575,6 +595,7 @@ Engine-implied distributions are computed via the FedWatch-style
 methodology on Databento ZQ data; the engine-output CSV is committed
 to the repository for direct reproduction without requiring Databento
 access.
+
 
 \bibliography{refs}
 

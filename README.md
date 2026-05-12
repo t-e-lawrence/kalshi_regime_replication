@@ -6,7 +6,7 @@ A short replication note showing that the central empirical claim of **[Diercks,
 
 **Full paper:** [paper/paper.pdf](paper/paper.pdf)
 
-**Headline finding:** DKW's documented disagreement between Kalshi and fed funds futures over FOMC outcomes is heavily regime-conditional. On "quiet" meetings — the bulk of the sample — every sign-match metric is at or below 56%. The 71% sign-match the paper's framing rests on emerges only in the 7-meeting "mixed" sub-sample, where it just clears the implicit 70% threshold. The spread-gap pattern is also partly mechanical: a 5-bucket linear-interpolation engine has lower entropy on common buckets than Kalshi's typical 4–7-bucket support by construction — consistent with, not separate from, the binomial-tree critique DKW make.
+**Headline finding:** DKW's documented disagreement between Kalshi and fed funds futures over FOMC outcomes is heavily regime-conditional. On "quiet" meetings — the bulk of the sample — every sign-match metric sits at or below 50%, indistinguishable from random. The 71% sign-match the paper's framing rests on emerges only in the 7-meeting "mixed" sub-sample, where all three patterns just clear the implicit 70% threshold. The spread-gap and tail-gap patterns are also partly mechanical: our 5-bucket linear-interpolation engine has lower entropy and less far-tail mass than Kalshi's typical 4–7-bucket support by construction — consistent with, not separate from, the binomial-tree critique DKW make.
 
 **Why this matters:** Regime-conditional analysis is the right tool for the question the paper poses, and applying it sharpens their qualitative claim — the disagreement is real, but mechanism-specific and concentrated in a minority of meetings.
 
@@ -18,25 +18,29 @@ A short replication note showing that the central empirical claim of **[Diercks,
 
 **Part 2 — Regime-conditional extension.** The qualitative patterns from DKW Section 5 (mode over-concentration, narrower spread, tail under-allocation) are operationalized as three sign-match metrics and conditioned on a regime classification by minimum pre-meeting Kalshi mode probability.
 
-**Primary sample (n=27, Sept 2022 – Dec 2025):**
+**Primary sample (n=29, Sept 2022 – Mar 2026):**
 
 | Regime    | n  | $P(\Delta_{\text{mode}} > 0)$ | $P(\Delta_{\text{spread}} < 0)$ | $P(\Delta_{\text{tail}} < 0)$ |
 |-----------|----|-------------------------------|---------------------------------|-------------------------------|
-| Quiet     | 18 | 39%                           | 56%                             | 39%                           |
+| Quiet     | 20 | 40%                           | 50%                             | 50%                           |
 | Mixed     | 7  | 71%                           | 71%                             | 71%                           |
-| Contested | 2  | 50%                           | 50%                             | 50%                           |
-| **All**   | 27 | **48%**                       | **59%**                         | **48%**                       |
+| Contested | 2  | 50%                           | 100%                            | 100%                          |
+| **All**   | 29 | **48%**                       | **59%**                         | **59%**                       |
 
-**Robustness on the full n=37 sample (adds 8 pre-Sept-2022 + 2 early-2026 meetings):**
+**Robustness on the full n=37 sample (adds 8 pre-Sept-2022 meetings):**
 
 | Regime    | n  | $P(\Delta_{\text{mode}} > 0)$ | $P(\Delta_{\text{spread}} < 0)$ | $P(\Delta_{\text{tail}} < 0)$ |
 |-----------|----|-------------------------------|---------------------------------|-------------------------------|
-| Quiet     | 24 | 38%                           | 62%                             | 38%                           |
+| Quiet     | 24 | 38%                           | 46%                             | 42%                           |
 | Mixed     | 10 | 80%                           | 80%                             | 80%                           |
-| Contested | 3  | 67%                           | 67%                             | 67%                           |
-| **All**   | 37 | **51%**                       | **68%**                         | **51%**                       |
+| Contested | 3  | 67%                           | 100%                            | 100%                          |
+| **All**   | 37 | **51%**                       | **59%**                         | **57%**                       |
 
-The qualitative finding doesn't change: non-quiet patterns hold, quiet ones don't. Adding the extra meetings strengthens mixed-bucket sign-match from 5/7 to 8/10 and contested from 1/2 to 2/3.
+The qualitative finding doesn't change: mixed-bucket patterns clear
+the implicit 70% threshold on all three metrics; quiet-bucket
+patterns sit at the 50% boundary. Adding the 8 pre-Sept-2022
+meetings strengthens mixed-bucket sign-match from 5/7 to 8/10 and
+contested from 1/2 to 3/3.
 
 ## Repository contents
 
@@ -91,7 +95,7 @@ To regenerate the input CSVs from a fresh source rather than the committed ones:
 
 ## Limitations and honest caveats
 
-- **Sample size.** Primary sample is 27 meetings (Sept 2022 – Dec 2025), chosen to match DKW's reported sample size for like-for-like replication. Engine output for 10 additional meetings (8 pre-Sept-2022 + 2 early-2026) is used as a robustness check in Section 7.3 of the paper.
+- **Sample size.** Primary regime-conditional sample is 29 meetings (Sept 2022 – Mar 2026). The Table 3 Panel B replication uses a 27-meeting sub-window (Sept 2022 – Dec 2025) to match DKW's reported sample size for like-for-like comparison. Engine output for 8 additional pre-Sept-2022 meetings appears as a 37-meeting robustness check in Section 7.3 of the paper.
 - **SOFR options not addressed.** The original paper discusses SOFR options-derived distributions separately in its Section 5 (Figure 11 and surrounding text). SOFR options carry an additional ~6 bp SOFR–EFFR spread bias and an institutional hedging-demand bias not present in fed funds futures; whether those translate into more systematic per-meeting bias than the binomial-tree-driven patterns we evaluate here is a question this note does not test.
 - **Scope of replication.** We test the structural-disagreement patterns framed in DKW Section 5. We do not evaluate calibration of the implied densities against realized rates — that's a separate question, covered in the paper's Section 6.1 (Probability Integral Transform, their Figure 15).
 - **Statistical robustness.** The engine implements a 5-bucket FedWatch decomposition via linear interpolation, richer than the strict 2-bucket binomial-tree decomposition the paper critiques, but still narrower than Kalshi's 7-bucket support. The spread-gap pattern emerges mechanically from this support gap regardless of bucket count, not from the binomial-tree bias per se. The 71% sign-match in mixed meetings (n=7) only just clears the 70% threshold; with such small n, the binomial 95% confidence interval is roughly 29%–96% — directionally consistent with DKW's claim but not statistically robust on its own.

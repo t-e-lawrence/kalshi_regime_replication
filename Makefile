@@ -1,6 +1,9 @@
 .PHONY: replicate paper clean help
 
-PYTHON ?= python3
+# Use the project venv by default — `make_figures.py` needs matplotlib.
+# Override with e.g. `make PYTHON=python3 replicate` if you maintain
+# your own environment.
+PYTHON ?= .venv/bin/python
 
 help:
 	@echo "Targets:"
